@@ -15,10 +15,10 @@
 <style>
 /* ============================================================
    Palette — アースカラー（土・砂・草木のトーン）
-   背景は常に明るい生成り。黒背景は使用しない。
+   ライトは生成り、ダークは深いこげ茶。純黒は使用しない。
    ============================================================ */
 :root{
-  color-scheme:light;
+  color-scheme:light dark;
 
   --paper:#f7f1e6;        /* 背景：サンドベージュ */
   --paper-2:#f2ead9;
@@ -44,6 +44,31 @@
   --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
   --maxw:860px;
   --r:14px;
+}
+
+/* ダーク：黒ではなく深いこげ茶（土に沈んだトーン）をベースにする */
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#2e2820;        /* 背景：深いこげ茶 */
+    --paper-2:#342d24;
+    --surface:#39322a;      /* カード：一段明るいこげ茶 */
+    --surface-2:#443b31;    /* 面の切り替え：枯葉色 */
+    --ink:#ece5da;          /* 文字：生成り */
+    --ink-2:#c3b8a7;
+    --ink-3:#988c7c;
+    --line:#4b4237;
+    --line-2:#5e5346;
+
+    --asd:#9db6c3;          /* 石・青灰（明度を上げる） */
+    --adhd:#dda278;         /* テラコッタ */
+    --sld:#c6b67a;          /* カーキ */
+    --calm:#c9ae88;         /* 砂・主アクセント */
+    --care:#dc9886;         /* 注意 */
+    --ok:#a5bf93;           /* 苔・草 */
+
+    --asd-bg:#333f45; --adhd-bg:#43362b; --sld-bg:#3f3a2b;
+    --calm-bg:#40372c; --care-bg:#43322c; --ok-bg:#373f30;
+  }
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -98,25 +123,61 @@ header{
   text-decoration:none;letter-spacing:.04em;flex:none;
 }
 .logo span{color:var(--ink-3);margin:0 1px}
-nav ul{display:flex;gap:2px;list-style:none;margin:0 0 0 auto;padding:0;flex-wrap:wrap}
-nav a{
-  display:block;padding:6px 11px;font-size:13px;color:var(--ink-2);text-decoration:none;
-  border-radius:8px;transition:background .2s,color .2s;white-space:nowrap;
+/* ---- 2階層ナビゲーション ---- */
+.menu{display:flex;gap:2px;list-style:none;margin:0 0 0 auto;padding:0}
+.grp{position:relative}
+.gbtn{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:13px;font-family:inherit;
+  color:var(--ink-2);background:transparent;border:0;border-radius:8px;cursor:pointer;
+  transition:background .2s,color .2s;white-space:nowrap;line-height:1.9;
 }
-nav a:hover{background:var(--surface-2);color:var(--ink)}
-nav a.active{color:var(--calm);background:var(--calm-bg);font-weight:500}
+.gbtn::after{
+  content:"";width:5px;height:5px;border-right:1.2px solid currentColor;border-bottom:1.2px solid currentColor;
+  transform:rotate(45deg) translate(-1px,-1px);opacity:.6;transition:transform .2s;
+}
+.gbtn:hover{background:var(--surface-2);color:var(--ink)}
+.grp.active > .gbtn{color:var(--calm);background:var(--calm-bg);font-weight:500}
+.grp.open > .gbtn::after,.grp:hover > .gbtn::after{transform:rotate(-135deg) translate(-1px,-1px)}
+
+.sub{
+  position:absolute;top:calc(100% + 6px);right:0;min-width:214px;list-style:none;margin:0;padding:7px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  box-shadow:0 10px 28px -14px rgba(74,64,54,.45);
+  opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .18s,transform .18s,visibility .18s;
+}
+.grp:hover > .sub,.grp:focus-within > .sub,.grp.open > .sub{opacity:1;visibility:visible;transform:none}
+.sub a{
+  display:flex;align-items:baseline;gap:10px;padding:9px 12px;font-size:13.5px;color:var(--ink-2);
+  text-decoration:none;border-radius:8px;transition:background .2s,color .2s;white-space:nowrap;line-height:1.7;
+}
+.sub a .n{font-family:var(--serif);font-size:11px;color:var(--ink-3);letter-spacing:.08em}
+.sub a:hover{background:var(--surface-2);color:var(--ink)}
+.sub a.active{color:var(--calm);background:var(--calm-bg);font-weight:500}
+.sub a.active .n{color:var(--calm)}
+
 .navbtn{
   display:none;margin-left:auto;background:transparent;border:1px solid var(--line-2);
   color:var(--ink-2);border-radius:8px;padding:7px 13px;font-size:13px;font-family:inherit;cursor:pointer;
 }
 @media (max-width:900px){
   .navbtn{display:block}
-  nav ul{
+  .menu{
     position:absolute;top:60px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--line);
-    flex-direction:column;gap:0;padding:6px;display:none;
+    flex-direction:column;gap:0;padding:10px 6px 14px;display:none;max-height:calc(100vh - 60px);overflow:auto;
   }
-  nav ul.open{display:flex}
-  nav a{padding:12px 14px;font-size:14.5px}
+  .menu.open{display:flex}
+  /* モバイルでは階層を展開したまま、見出し＋字下げで表現する */
+  .gbtn{
+    width:100%;pointer-events:none;font-size:11.5px;letter-spacing:.16em;color:var(--ink-3);
+    padding:14px 14px 6px;background:none;
+  }
+  .gbtn::after{display:none}
+  .grp.active > .gbtn{background:none;color:var(--ink-3);font-weight:400}
+  .sub{
+    position:static;opacity:1;visibility:visible;transform:none;min-width:0;
+    background:none;border:0;border-radius:0;box-shadow:none;padding:0 6px;
+  }
+  .sub a{padding:11px 14px;font-size:14.5px}
 }
 
 /* ============================================================
@@ -340,15 +401,30 @@ footer{border-top:1px solid var(--line);padding:48px 0 40px;background:var(--sur
   <div class="wrap-wide hd">
     <a class="logo" href="#top">発達障害<span>｜</span>まとめノート</a>
     <button class="navbtn" id="navbtn" aria-expanded="false" aria-controls="nv">メニュー</button>
-    <nav><ul id="nv">
-      <li><a href="#what">発達障害とは</a></li>
-      <li><a href="#types">種類</a></li>
-      <li><a href="#cause">原因</a></li>
-      <li><a href="#impact">影響</a></li>
-      <li><a href="#cope">対処法</a></li>
-      <li><a href="#strength">強み</a></li>
-      <li><a href="#around">周囲の方へ</a></li>
-      <li><a href="#support">相談先</a></li>
+    <nav aria-label="ノートの目次"><ul class="menu" id="nv">
+      <li class="grp">
+        <button class="gbtn" type="button" aria-expanded="false">まず知る</button>
+        <ul class="sub">
+          <li><a href="#what"><span class="n">01</span>発達障害とは何か</a></li>
+          <li><a href="#types"><span class="n">02</span>主な種類と診断</a></li>
+          <li><a href="#cause"><span class="n">03</span>何が原因なのか</a></li>
+        </ul>
+      </li>
+      <li class="grp">
+        <button class="gbtn" type="button" aria-expanded="false">当事者として</button>
+        <ul class="sub">
+          <li><a href="#impact"><span class="n">04</span>当事者に起きていること</a></li>
+          <li><a href="#cope"><span class="n">05</span>対処法と工夫</a></li>
+          <li><a href="#strength"><span class="n">06</span>特性としての強み</a></li>
+        </ul>
+      </li>
+      <li class="grp">
+        <button class="gbtn" type="button" aria-expanded="false">支える・つながる</button>
+        <ul class="sub">
+          <li><a href="#around"><span class="n">07</span>周囲の方へ</a></li>
+          <li><a href="#support"><span class="n">08</span>相談先と最初の一歩</a></li>
+        </ul>
+      </li>
     </ul></nav>
   </div>
 </header>
@@ -1027,12 +1103,32 @@ footer{border-top:1px solid var(--line);padding:48px 0 40px;background:var(--sur
 (function(){
   "use strict";
   var btn=document.getElementById('navbtn'), nv=document.getElementById('nv');
+  var grps=[].slice.call(nv.querySelectorAll('.grp'));
+
+  function closeGroups(except){
+    grps.forEach(function(g){
+      if(g!==except){g.classList.remove('open');g.querySelector('.gbtn').setAttribute('aria-expanded','false');}
+    });
+  }
+  /* デスクトップはホバーでも開くが、キーボード・タッチ用にクリックでも開閉する */
+  grps.forEach(function(g){
+    g.querySelector('.gbtn').addEventListener('click',function(){
+      var o=g.classList.toggle('open');
+      this.setAttribute('aria-expanded',o?'true':'false');
+      if(o) closeGroups(g);
+    });
+  });
+  document.addEventListener('click',function(e){ if(!e.target.closest('.grp')) closeGroups(null); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeGroups(null); });
+
   btn.addEventListener('click',function(){
     var o=nv.classList.toggle('open');
     btn.setAttribute('aria-expanded',o?'true':'false');
   });
   nv.addEventListener('click',function(e){
-    if(e.target.closest('a')){nv.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+    if(e.target.closest('a')){
+      nv.classList.remove('open');btn.setAttribute('aria-expanded','false');closeGroups(null);
+    }
   });
 
   var rvs=document.querySelectorAll('.rv');
@@ -1045,13 +1141,15 @@ footer{border-top:1px solid var(--line);padding:48px 0 40px;background:var(--sur
     rvs.forEach(function(el){el.classList.add('in');});
   }
 
-  var links=Array.prototype.slice.call(document.querySelectorAll('nav a'));
+  var links=Array.prototype.slice.call(nv.querySelectorAll('.sub a'));
   var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));}).filter(Boolean);
   var tb=document.getElementById('top-btn'), ticking=false;
   function spy(){
     var y=window.scrollY+120, cur=null;
     secs.forEach(function(s){ if(s.offsetTop<=y) cur=s; });
     links.forEach(function(a){ a.classList.toggle('active', !!cur && a.getAttribute('href')==='#'+cur.id); });
+    /* 子が現在地なら、親のグループも点灯させる */
+    grps.forEach(function(g){ g.classList.toggle('active', !!g.querySelector('.sub a.active')); });
     tb.classList.toggle('show', window.scrollY>600);
   }
   window.addEventListener('scroll',function(){
